@@ -1,7 +1,8 @@
-import sys, os
+import sys
+import os
 import yaml
 from PyQt5.uic import loadUi
-from PyQt5.QtWidgets import QApplication, QWidget
+from PyQt5.QtWidgets import QApplication, QWidget, QFileSystemModel
 
 
 class CcPipeMainWindow(QWidget):
@@ -31,6 +32,8 @@ class CcPipeMainWindow(QWidget):
         self.ui.NewShotBtn.clicked.connect(self.open_new_shot)
         self.ui.NewTaskBtn.clicked.connect(self.open_new_task)
         self.ui.ProjectView.clicked.connect(lambda: self.load_proj_info(
+            self.ui.ProjectView.currentItem().text()))
+        self.ui.ProjectView.clicked.connect(lambda: self.populate_shot_view(
             self.ui.ProjectView.currentItem().text()))
         self.ui.BrowseProjBtn.clicked.connect(lambda: self.browse_proj(
             self.ui.ProjectView.currentItem().text()))
@@ -91,6 +94,20 @@ class CcPipeMainWindow(QWidget):
         except:
             os.startfile(projName)
 
+    def populate_shot_view(self, projName):
+        """ Create and attach a QFileSystemModel() to the tree view """
+
+        proj_path = os.path.join(self.repo_path, projName)
+
+        self.model = QFileSystemModel()
+        self.model.setRootPath(self.repo_path)
+
+        self.view = self.ui.ShotTaskView
+        self.view.setModel(self.model)
+        self.view.setRootIndex(self.model.index(proj_path))
+        self.view.hideColumn(1)
+        self.view.hideColumn(2)
+        self.view.resizeColumnToContents(1)
 
 class CcPipeNewProject(QWidget):
     def __init__(self):
@@ -136,24 +153,57 @@ class CcPipeNewProject(QWidget):
 class CcPipeNewShot(QWidget):
     def __init__(self):
         super(CcPipeNewShot, self).__init__()
+
+        self.project = CcPipeMainWindow.ui.ProjectView.currentItem().text()
         self.init_ui()
 
     def init_ui(self):
         self.ui = loadUi('ui/NewShot.ui')
         self.ui.show()
 
+        self.ui.ProjNameLbl.setText(self.project)        
+        self.ui.NewShotBtn.clicked.connect(self.create_shot)
+
+    def create_shot(self):
+        if self.ui.ShotNameEdit.text() == '':
+            print('Shot name empty!')
+        else:
+            path_head = os.path.join(CcPipeMainWindow.repo_path, self.project)
+            path_tail = self.ui.ShotNameEdit.text()
+            path = os.path.join(path_head, path_tail)
+
+            if not os.path.exists(path):
+                os.mkdir(path)
+                print('Shot created in ' + path)
+            else:
+                print('Shot already exists!')
+
 
 class CcPipeNewTask(QWidget):
     def __init__(self):
         super(CcPipeNewTask, self).__init__()
+
+        self.project = CcPipeMainWindow.ui.ProjectView.currentItem().text()
+        self.shot = None
         self.init_ui()
 
     def init_ui(self):
         self.ui = loadUi('ui/NewTask.ui')
         self.ui.show()
 
+        self.ui.NewTaskBtn.clicked.connect(self.create_task)
 
+    def create_task(self):
+        pass
+        # check if name is empty
 
+        # check if software is other
+
+        # if software is not other then make relevant folders
+
+        # if software is other then ungrey field and check if empty
+
+        # 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     CcPipeMainWindow = CcPipeMainWindow()

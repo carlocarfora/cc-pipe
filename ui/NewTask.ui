@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>280</width>
-    <height>140</height>
+    <height>180</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -19,13 +19,13 @@
   <property name="minimumSize">
    <size>
     <width>280</width>
-    <height>140</height>
+    <height>180</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>280</width>
-    <height>140</height>
+    <height>180</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -84,6 +84,18 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Other Name:</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
      <item>
@@ -99,7 +111,30 @@
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="TaskSoftwareCmb"/>
+        <widget class="QComboBox" name="TaskSoftwareCmb">
+         <item>
+          <property name="text">
+           <string>Houdini</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Nuke</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Other</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEdit">
+         <property name="placeholderText">
+          <string>other name here</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
