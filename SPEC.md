@@ -130,7 +130,11 @@ Projects
 	SuperAmazingFilm
 		Sh001
 			Nuk
-
+				LookDev
+					comp
+					scripts
+					elements
+					ref
 
 #### General Software Folder Structure
 

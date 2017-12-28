@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>280</width>
+    <width>320</width>
     <height>180</height>
    </rect>
   </property>
@@ -18,13 +18,13 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>280</width>
+    <width>320</width>
     <height>180</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>280</width>
+    <width>320</width>
     <height>180</height>
    </size>
   </property>
@@ -85,14 +85,14 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label">
+        <widget class="QLabel" name="OtherNameLbl">
          <property name="font">
           <font>
            <pointsize>10</pointsize>
           </font>
          </property>
          <property name="text">
-          <string>Other Name:</string>
+          <string>Other Software:</string>
          </property>
         </widget>
        </item>
@@ -101,12 +101,18 @@
      <item>
       <layout class="QVBoxLayout" name="VBoxEdits">
        <item>
-        <widget class="QLineEdit" name="TaskNameEdit_2">
+        <widget class="QLineEdit" name="TaskNameEdit">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
          <property name="placeholderText">
-          <string>new shot name</string>
+          <string>new task name</string>
          </property>
          <property name="cursorMoveStyle">
           <enum>Qt::LogicalMoveStyle</enum>
+         </property>
+         <property name="clearButtonEnabled">
+          <bool>false</bool>
          </property>
         </widget>
        </item>
@@ -130,9 +136,9 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEdit">
+        <widget class="QLineEdit" name="OtherSoftwareEdit">
          <property name="placeholderText">
-          <string>other name here</string>
+          <string>other software name </string>
          </property>
         </widget>
        </item>
