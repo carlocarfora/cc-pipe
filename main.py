@@ -3,6 +3,7 @@ import os
 import yaml
 import shutil
 import subprocess
+from pathlib import Path
 from PyQt5.QtCore import QUrl
 from PyQt5.uic import loadUi
 from PyQt5.QtWidgets import (QApplication, QWidget, QFileSystemModel, 
@@ -27,7 +28,7 @@ class CcPipeMainWindow(QWidget):
 
     def init_ui(self):
 
-        # Load Ui
+        # Load UI
         self.ui = loadUi('ui/MainWindow.ui')
         self.ui.show()
 
@@ -38,9 +39,10 @@ class CcPipeMainWindow(QWidget):
         self.ui.DeleteShotTaskBtn.clicked.connect(self.delete_shot_task)
         self.ui.SettingsBtn.clicked.connect(self.open_settings)
         self.ui.HelpBtn.clicked.connect(self.open_help)
-        self.ui.HouBtn.clicked.connect(self.open_hou)
         self.ui.NukBtn.clicked.connect(self.open_nuk)
 
+        self.ui.HouBtn.clicked.connect(lambda: self.open_hou( 
+            self.ui.ProjectView.currentItem().text()))
         self.ui.ProjectView.clicked.connect(lambda: self.load_proj_info(
             self.ui.ProjectView.currentItem().text()))
         self.ui.ProjectView.clicked.connect(lambda: self.populate_shot_view(
@@ -49,6 +51,10 @@ class CcPipeMainWindow(QWidget):
             self.ui.ProjectView.currentItem().text()))
         self.ui.DeleteProjBtn.clicked.connect(lambda: self.delete_proj(
             self.ui.ProjectView.currentItem().text()))
+
+    def set_ui_text(self, ver):
+        self.ui.VersionLbl.setText('cc-pipe version ' + str(ver))
+        self.ui.RepoLocationLbl.setText(self.repo_path)
 
     def open_new_project(self):
         self.window = CcPipeNewProject()
@@ -77,11 +83,32 @@ class CcPipeMainWindow(QWidget):
         self.window = CcPipeHelp()
         self.window.init_ui()
 
-    def open_hou(self):
+    def open_hou(self,projName):
+        proj_yaml = 'data/projects/' + projName + '.yml'
+        with open(proj_yaml, 'r') as file:
+            s = yaml.load(file)
+
         try:
             index = self.ui.ShotTaskView.selectedIndexes()[0]
             current_path = self.model.filePath(index)
-            subprocess.Popen(['shou'], cwd=current_path, shell=True)
+            abs_repo = os.path.abspath(self.repo_path)
+
+            p = Path(current_path)
+            p.parts # splits path into list 
+            path_rel = p.relative_to(abs_repo)
+            path_rel_list = path_rel.parts
+            print(path_rel_list)
+            task = path_rel_list[3]
+            shot = path_rel_list[1]
+            job = os.path.join(abs_repo, path_rel)
+
+            if len(path_rel_list) == 4:
+                print("Launching Houdini...")
+                subprocess.Popen(['launcher/hou.sh', s['fps'], s['width'], 
+                  s['height'], s['projectname'], task, shot, job])
+            else:
+                print('You must launch Houdini from a task folder ' + 
+                    'for the environment to build correctly')
         except:
             print('You must launch software from a task')        
 
@@ -102,10 +129,6 @@ class CcPipeMainWindow(QWidget):
         settings = data.get('settings')
         self.repo_path = settings['repo']
         self.version = settings['version']
-
-    def set_ui_text(self, ver):
-        self.ui.VersionLbl.setText('cc-pipe version ' + str(ver))
-        self.ui.RepoLocationLbl.setText(self.repo_path)
 
     def list_projects(self, rootDir):
         sortedDir = sorted(os.listdir(rootDir))
