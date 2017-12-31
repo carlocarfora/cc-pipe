@@ -6,9 +6,10 @@ import subprocess
 from pathlib import Path
 from PyQt5.QtCore import QUrl
 from PyQt5.uic import loadUi
-from PyQt5.QtWidgets import (QApplication, QWidget, QFileSystemModel, 
-    QMessageBox, QVBoxLayout)
+from PyQt5.QtWidgets import (QApplication, QWidget, QFileSystemModel,
+                             QMessageBox)
 from PyQt5.QtWebEngineWidgets import QWebEngineView
+
 
 class CcPipeMainWindow(QWidget):
     def __init__(self):
@@ -39,9 +40,10 @@ class CcPipeMainWindow(QWidget):
         self.ui.DeleteShotTaskBtn.clicked.connect(self.delete_shot_task)
         self.ui.SettingsBtn.clicked.connect(self.open_settings)
         self.ui.HelpBtn.clicked.connect(self.open_help)
-        self.ui.NukBtn.clicked.connect(self.open_nuk)
 
-        self.ui.HouBtn.clicked.connect(lambda: self.open_hou( 
+        self.ui.NukBtn.clicked.connect(lambda: self.open_nuk(
+            self.ui.ProjectView.currentItem().text()))
+        self.ui.HouBtn.clicked.connect(lambda: self.open_hou(
             self.ui.ProjectView.currentItem().text()))
         self.ui.ProjectView.clicked.connect(lambda: self.load_proj_info(
             self.ui.ProjectView.currentItem().text()))
@@ -61,8 +63,11 @@ class CcPipeMainWindow(QWidget):
         self.window.init_ui()
 
     def open_new_shot(self):
-        self.window = CcPipeNewShot()
-        self.window.init_ui()
+        try:
+            self.window = CcPipeNewShot()
+            self.window.init_ui()
+        except:
+            print("Choose a shot first")
 
     def open_new_task(self):
         if len(self.ui.ShotTaskView.selectedIndexes()) == 0:
@@ -83,7 +88,9 @@ class CcPipeMainWindow(QWidget):
         self.window = CcPipeHelp()
         self.window.init_ui()
 
-    def open_hou(self,projName):
+    def open_hou(self, projName):
+        """ Launches Houdini using a shell script """
+
         proj_yaml = 'data/projects/' + projName + '.yml'
         with open(proj_yaml, 'r') as file:
             s = yaml.load(file)
@@ -97,26 +104,48 @@ class CcPipeMainWindow(QWidget):
             p.parts # splits path into list 
             path_rel = p.relative_to(abs_repo)
             path_rel_list = path_rel.parts
-            print(path_rel_list)
             task = path_rel_list[3]
             shot = path_rel_list[1]
             job = os.path.join(abs_repo, path_rel)
 
             if len(path_rel_list) == 4:
                 print("Launching Houdini...")
-                subprocess.Popen(['launcher/hou.sh', s['fps'], s['width'], 
+                subprocess.Popen(['launcher/hou.sh', s['fps'], s['width'],
                   s['height'], s['projectname'], task, shot, job])
             else:
-                print('You must launch Houdini from a task folder ' + 
+                print('You must launch Houdini from a task folder ' +
                     'for the environment to build correctly')
         except:
-            print('You must launch software from a task')        
+            print('You must launch software from a task')
 
-    def open_nuk(self):
+    def open_nuk(self, projName):
+        """ Launches nuke using a shell script """
+
+        proj_yaml = 'data/projects/' + projName + '.yml'
+        with open(proj_yaml, 'r') as file:
+            s = yaml.load(file)
+
         try:
             index = self.ui.ShotTaskView.selectedIndexes()[0]
             current_path = self.model.filePath(index)
-            subprocess.Popen(['optirun nuke'], cwd=current_path, shell=True)
+            abs_repo = os.path.abspath(self.repo_path)
+
+            p = Path(current_path)
+            p.parts # splits path into list 
+            path_rel = p.relative_to(abs_repo)
+            path_rel_list = path_rel.parts
+            task = path_rel_list[3]
+            shot = path_rel_list[1]
+            job = os.path.join(abs_repo, path_rel)
+            nuke_path = os.path.join(sys.path[0], 'launcher', 'nuke')
+
+            if len(path_rel_list) == 4:
+                print("Launching Nuke...")
+                subprocess.Popen(['launcher/nuke.sh', s['fps'], s['width'], 
+                  s['height'], s['projectname'], task, shot, job, nuke_path])
+            else:
+                print('You must launch Houdini from a task folder ' + 
+                    'for the environment to build correctly')
         except:
             print('You must launch software from a task')
 
@@ -163,31 +192,32 @@ class CcPipeMainWindow(QWidget):
         try:
             proj_path = os.path.join(self.repo_path, projName)
             yaml_path = 'data/projects'
-            
+
             delete_msg = 'Delete ' + projName + '? This cannot be undone!'
-            reply = QMessageBox.question(self, 'Message', 
-                     delete_msg, QMessageBox.Yes | QMessageBox.No, 
-                     QMessageBox.No)
+            reply = QMessageBox.question(
+                self, 'Message', delete_msg, QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No)
 
             if reply == QMessageBox.Yes:
                 try:
                     if os.path.exists(proj_path):
-                        yaml_file = (os.path.join(yaml_path, projName) + '.yml')
+                        yaml_file = (
+                            os.path.join(yaml_path, projName) + '.yml')
                         print('Deleted project folder ' + proj_path)
-                        print('Deleted' + yaml_file)                     
+                        print('Deleted' + yaml_file)
                         shutil.rmtree(
                             proj_path, ignore_errors=False, onerror=None)
                         os.remove(yaml_file)
-                        self.ui.ProjectView.clear()   
+                        self.ui.ProjectView.clear()
                         self.list_projects(self.repo_path)
                     else:
                         print('Project does not exist!')
                 except:
                     print("Unable to delete selected")
-            else: 
+            else:
                 print('Delete project cancelled')
         except:
-            print("Error, need to select a folder to delete!") 
+            print("Error, need to select a folder to delete!")
 
     def populate_shot_view(self, projName):
         """ Create and attach a QFileSystemModel() to the tree view """
@@ -213,9 +243,9 @@ class CcPipeMainWindow(QWidget):
 
             delete_msg = 'Delete ' + tail[1] + '?'
 
-            reply = QMessageBox.question(self, 'Message', 
-                     delete_msg, QMessageBox.Yes | QMessageBox.No, 
-                     QMessageBox.No)
+            reply = QMessageBox.question(
+                self, 'Message', delete_msg, QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No)
 
             if reply == QMessageBox.Yes:
                 try:
@@ -241,15 +271,15 @@ class CcPipeNewProject(QWidget):
         self.ui.NewProjectBtn.clicked.connect(self.create_project)
 
     def create_project(self):
-        """ Writes a project settings yaml file and creates a project folder """
-        
+        """ Writes a project settings yaml file and creates a project folder"""
+
         d = dict()
         d['projectname'] = self.ui.NameEdit.text()
         d['width'] = self.ui.WidthEdit.text()
         d['height'] = self.ui.HeightEdit.text()
         d['fps'] = self.ui.FPSEdit.text()
 
-        values = all([value for key, value in d.items() if value ==''])
+        values = all([value for key, value in d.items() if value == ''])
 
         if not values:
             print('One or more fields are blank')
@@ -258,7 +288,7 @@ class CcPipeNewProject(QWidget):
             file_path = 'data/projects/'
             file_name = file_path + d['projectname'] + '.yml'
 
-            with open(file_name,'w') as f:
+            with open(file_name, 'w') as f:
                 f.write(yaml.dump(d, default_flow_style=False))
 
             # create folder in projects repo
@@ -283,7 +313,7 @@ class CcPipeNewShot(QWidget):
         self.ui = loadUi('ui/NewShot.ui')
         self.ui.show()
 
-        self.ui.ProjNameLbl.setText(self.project)        
+        self.ui.ProjNameLbl.setText(self.project)
         self.ui.NewShotBtn.clicked.connect(self.create_shot)
 
     def create_shot(self):
@@ -316,13 +346,13 @@ class CcPipeNewTask(QWidget):
         self.ui.show()
 
         self.proj_shot_path = self.split_path(self.item)
-        self.ui.ProjShotDirLbl.setText(self.proj_shot_path) 
-       
-        self.ui.NewTaskBtn.clicked.connect(lambda:self.create_task(
+        self.ui.ProjShotDirLbl.setText(self.proj_shot_path)
+
+        self.ui.NewTaskBtn.clicked.connect(lambda: self.create_task(
             self.ui.TaskNameEdit.text(),
             self.ui.TaskSoftwareCmb.currentText()))
-        self.ui.TaskSoftwareCmb.currentIndexChanged.connect(lambda:
-            self.check_text(self.ui.TaskSoftwareCmb.currentText()))
+        self.ui.TaskSoftwareCmb.currentIndexChanged.connect(
+            lambda: self.check_text(self.ui.TaskSoftwareCmb.currentText()))
         self.ui.OtherSoftwareEdit.setEnabled(0)
 
     def split_path(self, path):
@@ -331,8 +361,8 @@ class CcPipeNewTask(QWidget):
         proj = os.path.split(shot[0])
         repo = CcPipeMainWindow.repo_path
         concat = os.path.join(proj[1], shot[1])
-        concat_path = os.path.join(repo, concat)    
-        
+        concat_path = os.path.join(repo, concat)
+
         return concat_path
 
     def check_text(self, text):
@@ -365,9 +395,6 @@ class CcPipeNewTask(QWidget):
                     'elements',
                     'ref']
 
-        make_dirs = {'hou': hou_dirs, 
-                     'nuk': nuk_dirs,}
-
         software_path = os.path.join(self.proj_shot_path, software.lower())
 
         if name == '':
@@ -382,7 +409,7 @@ class CcPipeNewTask(QWidget):
                     print('Task already exists!')
             elif software == 'Nuke':
                 task_path = os.path.join(software_path, name)
-                if not os.path.exists(task_path):                       
+                if not os.path.exists(task_path):
                     for path in nuk_dirs:
                         os.makedirs(os.path.join(task_path, path))
                 else:
@@ -391,8 +418,8 @@ class CcPipeNewTask(QWidget):
                 if other_software == '':
                     print('Other Software is empty!')
                 else:
-                    other_path = os.path.join(self.proj_shot_path, 
-                        other_software.lower())
+                    other_path = os.path.join(self.proj_shot_path,
+                                              other_software.lower())
                     task_path = os.path.join(other_path, name)
                     if not os.path.exists(task_path):
                         os.makedirs(task_path)
