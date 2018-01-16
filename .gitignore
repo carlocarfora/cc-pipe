@@ -138,3 +138,4 @@ cc-pipe.sublime-workspace
 pip-selfcheck.json
 bin/
 pyvenv.cfg
+lib64
