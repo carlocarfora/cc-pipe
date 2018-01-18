@@ -139,3 +139,4 @@ pip-selfcheck.json
 bin/
 pyvenv.cfg
 lib64
+SPEC.md
