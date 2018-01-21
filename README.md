@@ -15,9 +15,16 @@ Python 3.xx, Linux
  - `git clone https://github.com/carlocarfora/cc-pipe.git`
 
 2. Create a virtual environment in cc-pipe
- - `python3 -m venv /path/to/new/virtual/environment`
+ - `python -m venv /path/to/new/virtual/environment`
 
-3. Use pip to install from requirements.txt
- - `pip install -r /path/to/requirements.txt`
- 
-4. Open data>settings.yml and define your repo root
+3. Use pip to install from requirements.txt in cc-pipe folder
+ - `pip install -r requirements.txt`
+
+4. Open data>settings.yml and define your repo root (or open settings from cc-pipe itself)
+
+5. Start cc-pipe with the following command
+ - `python main.py`
+
+## Usage
+
+Check the help in ccpipe for usage instructions.
